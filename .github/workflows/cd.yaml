@@ -6,7 +6,7 @@ on:
 
 env:
   IMAGE_NAME: taskboard-fastapi
-  REGISTRY: ghcr.io/<TU_USUARIO>
+  REGISTRY: ghcr.io/falconerr88
 
 jobs:
   deploy:
