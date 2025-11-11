@@ -1,4 +1,4 @@
-# 🚀 TaskBoard DevOps
+# 🚀 TaskBoard DevOps- Thiago Lovey
 
 Proyecto demostrativo DevOps Junior con FastAPI, Docker, AWS y GitHub Actions.
 
@@ -27,4 +27,4 @@ Proyecto demostrativo DevOps Junior con FastAPI, Docker, AWS y GitHub Actions.
 
 
 GitHub Actions → EC2 (Docker)
-               ↳ S3 (archivos estáticos)
+               ↳ S3 (archivos estático)

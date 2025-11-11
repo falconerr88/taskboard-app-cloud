@@ -11,7 +11,7 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    needs: [build]  # se asegura que CI se ejecute antes
+    needs: [build-and-test]  # se asegura que CI se ejecute antes
 
     steps:
       - name: Checkout repository
