@@ -1,4 +1,4 @@
-# 🚀 TaskBoard DevOps- Thiago Lovey
+# 🚀 TaskBoard DevOps- Thiago Lovey Castelan
 
 Proyecto demostrativo DevOps Junior con FastAPI, Docker, AWS y GitHub Actions.
 
