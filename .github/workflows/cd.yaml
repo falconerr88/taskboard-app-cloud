@@ -45,6 +45,10 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: ${{ secrets.AWS_REGION }}
           SOURCE_DIR: app/static
+                
+      - name: Debug workspace contents
+        run: ls -R
+
 
       - name: Deploy to EC2 via SSH
         uses: appleboy/ssh-action@v1.2.0
