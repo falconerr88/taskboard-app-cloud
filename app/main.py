@@ -9,8 +9,7 @@ app.include_router(tasks.router, prefix="/tasks", tags=["Tasks"])
 
 @app.get("/")
 def home():
-    return {"message": "🚀 TaskBoard API corriendo correctamente en EC2
-                           Hecho por Thiago Lovey"}
+    return {"message": "🚀 TaskBoard API corriendo correctamente en EC2, Hecho por Thiago Lovey"}
 
 @app.post("/upload")
 async def upload_file(file: UploadFile = File(...)):
