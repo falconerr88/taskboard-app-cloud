@@ -24,16 +24,19 @@ jobs:
       - name: Load tag variable
         run: echo "TAG=$(cat ./artifact/tag.txt)" >> $GITHUB_ENV
 
-      - name: Set up SSH
-        uses: webfactory/ssh-agent@v0.8.0
-        with:
-          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
-
       - name: Deploy to EC2
-        run: |
-          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_PUBLIC_IP }} << 'EOF'
-          docker pull ${{ secrets.DOCKERHUB_USERNAME }}/taskboard:${{ env.TAG }}
-          docker stop taskboard || true
-          docker rm taskboard || true
-          docker run -d -p 80:8000 --name taskboard ${{ secrets.DOCKERHUB_USERNAME }}/taskboard:${{ env.TAG }}
-          EOF
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            sudo docker stop taskboard || true
+            sudo docker rm taskboard || true
+            sudo docker pull ghcr.io/${{ github.repository_owner }}/taskboard-fastapi:${{ env.TAG }}
+            sudo docker run -d --name taskboard -p 80:80 \
+              -e AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} \
+              -e AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
+              -e AWS_REGION=${{ secrets.AWS_REGION }} \
+              -e S3_BUCKET=${{ secrets.S3_BUCKET }} \
+              ghcr.io/${{ github.repository_owner }}/taskboard-fastapi:${{ env.TAG }}
