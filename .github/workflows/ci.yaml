@@ -1,8 +1,9 @@
-name: CI Pipeline
+name: CI - Build & Test
 
 on:
   push:
     branches: [ "main" ]
+  pull_request:
 
 jobs:
   build-and-test:
@@ -17,6 +18,14 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('app/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
       - name: Install dependencies
         run: |
           cd app
@@ -29,3 +38,15 @@ jobs:
 
       - name: Lint Dockerfile
         uses: hadolint/hadolint-action@v3.1.0
+
+      - name: Generate image tag
+        id: tag
+        run: echo "IMAGE_TAG=$(date +'%Y%m%d')-${GITHUB_SHA::7}" >> $GITHUB_ENV
+
+      - name: Upload tag artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: image-tag
+          path: |
+            ${{ github.workspace }}/tag.txt
+        run: echo "${{ env.IMAGE_TAG }}" > tag.txt

@@ -1,18 +1,10 @@
-name: CD Pipeline
-
-permissions:
-  contents: read
-  packages: write
+name: CD - Deploy to EC2
 
 on:
   workflow_run:
-    workflows: ["CI Pipeline"]
+    workflows: ["CI - Build & Test"]
     types:
       - completed
-
-env:
-  IMAGE_NAME: taskboard-fastapi
-  REGISTRY: ghcr.io/falconerr88
 
 jobs:
   deploy:
@@ -22,51 +14,26 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Download image tag
+        uses: actions/download-artifact@v4
         with:
-          fetch-depth: 0
+          name: image-tag
+          path: ./artifact
 
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
+      - name: Load tag variable
+        run: echo "TAG=$(cat ./artifact/tag.txt)" >> $GITHUB_ENV
+
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.8.0
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
 
-      - name: Build Docker image
-        run: docker build -t $REGISTRY/$IMAGE_NAME:latest .
-
-      - name: Push Docker image
-        run: docker push $REGISTRY/$IMAGE_NAME:latest
-
-      - name: Debug workspace contents
-        run: ls -R
-
-
-      - name: Upload static files to S3 (via AWS CLI)
-        working-directory: ${{ github.workspace }}
+      - name: Deploy to EC2
         run: |
-          echo "Syncing static files..."
-          ls -R ./app
-          aws s3 sync ./app/static s3://${{ secrets.S3_BUCKET }}/ --delete
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-                
-
-      - name: Deploy to EC2 via SSH
-        uses: appleboy/ssh-action@v1.2.0
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            sudo docker stop taskboard || true
-            sudo docker rm taskboard || true
-            sudo docker pull ghcr.io/falconerr88/taskboard-fastapi:latest
-            sudo docker run -d --name taskboard -p 80:80 \
-              -e AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} \
-              -e AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
-              -e AWS_REGION=${{ secrets.AWS_REGION }} \
-              -e S3_BUCKET=${{ secrets.S3_BUCKET }} \
-              ghcr.io/falconerr88/taskboard-fastapi:latest
+          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_PUBLIC_IP }} << 'EOF'
+          docker pull ${{ secrets.DOCKERHUB_USERNAME }}/taskboard:${{ env.TAG }}
+          docker stop taskboard || true
+          docker rm taskboard || true
+          docker run -d -p 80:8000 --name taskboard ${{ secrets.DOCKERHUB_USERNAME }}/taskboard:${{ env.TAG }}
+          EOF
