@@ -1,8 +1,8 @@
-name: CI - Build & Test  # 👈 El CD escuchará este nombre
+name: CI - Build & Test
 
 on:
   push:
-    branches: ["main"]
+    branches: [ "main" ]
   pull_request:
 
 env:
@@ -28,13 +28,20 @@ jobs:
           pip install --no-cache-dir -r requirements.txt
           pip install pytest
 
-      - name: Run tests
+      - name: Run basic tests
         run: |
-          cd app
           pytest -v || echo "⚠️ Tests faltantes: CI solo valida construcción por ahora."
 
       - name: Lint Dockerfile
         uses: hadolint/hadolint-action@v3.1.0
+
+      - name: Normalize registry and image name
+        run: |
+          REGISTRY_LC=$(echo "${{ env.REGISTRY }}" | tr '[:upper:]' '[:lower:]')
+          IMAGE_NAME_LC=$(echo "${{ env.IMAGE_NAME }}" | tr '[:upper:]' '[:lower:]')
+          echo "REGISTRY=$REGISTRY_LC" >> $GITHUB_ENV
+          echo "IMAGE_NAME=$IMAGE_NAME_LC" >> $GITHUB_ENV
+          echo "✅ Nombre final: $REGISTRY_LC/$IMAGE_NAME_LC"
 
       - name: Log in to GHCR
         uses: docker/login-action@v3
@@ -42,22 +49,4 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and tag Docker image
-        run: |
-          TAG="v-${{ github.run_number }}"
-          echo "$TAG" > tag.txt
-          docker build -t $REGISTRY/$IMAGE_NAME:latest .
-          docker tag $REGISTRY/$IMAGE_NAME:latest $REGISTRY/$IMAGE_NAME:$TAG
-
-      - name: Push image to GHCR
-        run: |
-          docker push $REGISTRY/$IMAGE_NAME:$TAG
-          docker push $REGISTRY/$IMAGE_NAME:latest
-
-      - name: Upload image tag artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: image-tag
-          path: tag.txt
 
