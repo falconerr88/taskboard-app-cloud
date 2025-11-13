@@ -2,9 +2,9 @@ name: CD - Deploy to EC2 and upload to static to S3
 
 on:
   workflow_run:
-     workflows: ["CI - Build & Test"]
-      types: 
-        - completed
+    workflows: ["CI - Build & Test"]
+    types:
+      - completed
 
 env:
   IMAGE_NAME: taskboard-fastapi
