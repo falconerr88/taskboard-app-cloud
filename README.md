@@ -1,5 +1,6 @@
 # 🚀 TaskBoard DevOps- Thiago Lovey Castelan
 
+
 Proyecto demostrativo DevOps Junior con FastAPI, Docker, AWS y GitHub Actions.
 
 ## 🧠 Tecnologías usadas
@@ -11,20 +12,29 @@ Proyecto demostrativo DevOps Junior con FastAPI, Docker, AWS y GitHub Actions.
 - GHCR (GitHub Container Registry)
 
 ## ⚙️ Flujo del pipeline
-1. GitHub Actions construye la imagen Docker
-2. Sube la imagen a GHCR
-3. Sube los archivos estáticos a S3
-4. Se conecta por SSH a EC2
-5. Detiene el contenedor anterior
-6. Despliega la nueva versión automáticamente
+Archivo: .github/workflows/ci.yaml
+ 1.Se ejecuta automáticamente cuando hay un push a main.
+ 2.Construye la imagen Docker de la aplicación.
+ 3.Ejecuta los tests (si existen).
+ 4.Publica la imagen en GitHub Container Registry (GHCR).
+Resultado:
+→ La imagen queda almacenada en ghcr.io/falconerr88/taskboard-fastapi:latest
 
-## 🌐 Endpoints principales
-- `/` → Health check
-- `/upload` → Sube archivo a S3
-- `/tasks` → Lista de tareas
+2. CD (Despliegue Continuo)
+Archivo: .github/workflows/cd.yaml
+ 1.Espera a que el CI se ejecute correctamente.
+ 2.Se conecta por SSH a tu instancia EC2.
+ 3.Descarga la última imagen desde GHCR.
+ 4.Detiene el contenedor anterior (si existe) y lanza el nuevo.
+ 5.Sincroniza los archivos estáticos con S3.
+Resultado:
+→ La aplicación se actualiza automáticamente en tu servidor EC2.
+→ Se suben los archivos estaticos a S3.
+
+
 
 ## 📸 Arquitectura
 
 
 GitHub Actions → EC2 (Docker)
-               ↳ S3 (archivos estático)
+               ↳ S3 (archivos estático)  
