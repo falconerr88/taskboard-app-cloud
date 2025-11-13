@@ -41,12 +41,14 @@ jobs:
 
       - name: Generate image tag
         id: tag
-        run: echo "IMAGE_TAG=$(date +'%Y%m%d')-${GITHUB_SHA::7}" >> $GITHUB_ENV
-
+        run: |
+          TAG="$(date +'%Y%m%d')-${GITHUB_SHA::7}"
+          echo "$TAG" > tag.txt
+          echo "IMAGE_TAG=$TAG" >> $GITHUB_ENV
+      
       - name: Upload tag artifact
         uses: actions/upload-artifact@v4
         with:
           name: image-tag
-          path: |
-            ${{ github.workspace }}/tag.txt
-          run: echo "${{ env.IMAGE_TAG }}" > tag.txt
+          path: tag.txt
+           
