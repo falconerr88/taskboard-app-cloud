@@ -49,4 +49,4 @@ jobs:
           name: image-tag
           path: |
             ${{ github.workspace }}/tag.txt
-        run: echo "${{ env.IMAGE_TAG }}" > tag.txt
+          run: echo "${{ env.IMAGE_TAG }}" > tag.txt
